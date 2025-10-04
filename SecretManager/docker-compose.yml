@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secretmanager
+    ports:
+      - "5227:5227"
+    environment:
+      OpenBao__Url: "http://openbao:8200"
+      OpenBao__Token: "root"
+      ASPNETCORE_URLS: "http://+:5227"
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=aws-1-eu-north-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.hfqrijwbxklnuaszsxmb;Password=biteTheDust;Pooling=true;SSL Mode=Require;Trust Server Certificate=True"
+    depends_on:
+      - openbao
+
+  openbao:
+    image: openbao/openbao:latest
+    container_name: openbao
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+    command: "server -dev -dev-root-token-id=root"

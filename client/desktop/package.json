@@ -6,7 +6,7 @@
   "author": {
     "name": "Bite The Dust"
   },
-  "main": "dist/main/index.js",
+  "main": "dist/main/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -18,7 +18,7 @@ import { PrismaService } from './prisma/prisma.service';
         }
         return {
           secret,
-          signOptions: { expiresIn: '1h' },
+          signOptions: { expiresIn: '24h' },
         };
       },
       inject: [ConfigService],

@@ -1,0 +1,31 @@
+# SSO Authentication API Tests
+
+### 1. Initiate Keycloak SSO login (открыть в браузере)
+# Откройте в браузере для начала процесса авторизации
+GET http://localhost:3000/auth/login
+
+### 2. Success page (показывает результат после авторизации)
+# Этот эндпоинт покажет токен после успешной авторизации
+GET http://localhost:3000/auth/success?token=your-jwt-token-from-callback
+
+### 3. Get user profile (требует JWT токен)
+# Замените your-jwt-token-here на реальный токен из шага выше
+GET http://localhost:3000/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYTFkODY4My0xNGRlLTRkNTktYjAxYy1hOWNhOTQ3NmVlMjQiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc1OTYxMjg5MSwiZXhwIjoxNzU5Njk5MjkxfQ.vHS73tXcYd2TpFrKKxCGNr3K5hgRcgJuLarUrwydKGs
+
+### 4. Decode JWT token (без проверки подписи)
+# Декодирует JWT токен и показывает все данные включая роль
+GET http://localhost:3000/auth/decode-token?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYTFkODY4My0xNGRlLTRkNTktYjAxYy1hOWNhOTQ3NmVlMjQiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc1OTYxMjg5MSwiZXhwIjoxNzU5Njk5MjkxfQ.vHS73tXcYd2TpFrKKxCGNr3K5hgRcgJuLarUrwydKGs
+
+### Пример использования:
+# 1. Откройте в браузере: http://localhost:3000/auth/login  
+# 2. Войдите в Keycloak (testuser / password)
+# 3. Скопируйте JWT токен из URL после перенаправления
+# 4. Используйте токен в запросах выше для тестирования
+
+### Информация о вашем токене:
+# User ID: ba1d8683-14de-4d59-b01c-a9ca9476ee24
+# Email: test@example.com  
+# Role: USER
+# Issued: 2025-10-04 20:54:51 UTC
+# Expires: 2025-10-05 20:54:51 UTC (24 часа)

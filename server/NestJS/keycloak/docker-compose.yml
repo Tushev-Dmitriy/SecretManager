@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.0
+    container_name: keycloak-secrets
+    restart: always
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://aws-1-eu-north-1.pooler.supabase.com:6543/postgres?currentSchema=keycloak
+      KC_DB_USERNAME: postgres.hfqrijwbxklnuaszsxmb
+      KC_DB_PASSWORD: biteTheDust
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+      KC_DB_SCHEMA: keycloak
+    ports:
+      - '8080:8080'
+    command:
+      - start-dev
+      - --db-schema=keycloak
+    networks:
+      - keycloak-network
+    mem_limit: 1024m
+    mem_reservation: 512m
+
+networks:
+  keycloak-network:
+    driver: bridge

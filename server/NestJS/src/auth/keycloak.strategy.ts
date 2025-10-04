@@ -26,21 +26,6 @@ export class KeycloakStrategy extends PassportStrategy(Strategy, 'keycloak') {
       callbackURL: configService.get('KEYCLOAK_REDIRECT_URI', ''),
       scope: 'openid profile email',
     });
-
-    // Serialize user
-    passport.serializeUser((user: any, done: any) => {
-      done(null, user.id);
-    });
-
-    // Deserialize user
-    passport.deserializeUser(async (id: string, done: any) => {
-      try {
-        const user = await this.prisma.user.findUnique({ where: { id } });
-        done(null, user);
-      } catch (error) {
-        done(error, undefined);
-      }
-    });
   }
 
   async validate(...args: any[]): Promise<any> {

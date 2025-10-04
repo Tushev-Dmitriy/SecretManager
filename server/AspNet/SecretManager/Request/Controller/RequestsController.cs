@@ -1,73 +1,108 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SecretManager.Common.Services;
-using System.Security.Claims;
 using SecretManager.Common.Models.UserEntity;
+using SecretManager.Keys.Service;
+using SecretManager.OpenBao.Services;
+using SecretManager.Request.Services;
+using System.Security.Claims;
 
-namespace SecretManager.Request.Controllers
+namespace SecretManager.Requests.Controller
 {
     [ApiController]
     [Route("api/requests")]
     public class RequestsController : ControllerBase
     {
-        private readonly RequestService _service;
+        private readonly RequestService _requests;
+        private readonly OpenBaoService _openBao;
+        private readonly KeysService _keys;
+        private readonly string _token;
 
-        public RequestsController(RequestService service)
+        public RequestsController(
+            RequestService requests,
+            OpenBaoService openBao,
+            KeysService keys,
+            IConfiguration config)
         {
-            _service = service;
+            _requests = requests;
+            _openBao = openBao;
+            _keys = keys;
+            _token = config["OpenBao:Token"] ?? throw new InvalidOperationException("Missing OpenBao token");
         }
 
+        // 📝 Создание заявки
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> CreateRequest([FromBody] RequestCreateDto dto)
         {
             var userIdStr = User.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
-            if (!Guid.TryParse(userIdStr, out var userId))
-                return BadRequest("Invalid user id");
-
-            var request = await _service.CreateRequestAsync(userId, dto.Resource, dto.Reason);
-            return Ok(request);
+            var request = await _requests.CreateRequestAsync(userId, dto.Resource, dto.Reason);
+            return Ok(new
+            {
+                request_id = request.id,
+                status = request.status.ToString()
+            });
         }
 
+        // 👤 Получить свои заявки
         [HttpGet("my")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetMyRequests()
         {
             var userIdStr = User.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr)) return Unauthorized();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
 
-            if (!Guid.TryParse(userIdStr, out var userId))
-                return BadRequest("Invalid user id");
-
-            var requests = await _service.GetRequestsByUserAsync(userId);
-            return Ok(requests);
+            var list = await _requests.GetRequestsByUserAsync(userId);
+            return Ok(list);
         }
 
-
+        // 🧾 Все заявки (для админов)
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetAllRequests()
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetAll()
         {
-            var requests = await _service.GetAllRequestsAsync();
-            return Ok(requests);
+            var all = await _requests.GetAllRequestsAsync();
+            return Ok(all);
         }
 
+        // ✅ Одобрить заявку
         [HttpPut("{id}/approve")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> ApproveRequest(Guid id)
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> Approve(Guid id)
         {
-            var request = await _service.UpdateRequestStatusAsync(id, Status.APPROVED);
-            return request == null ? NotFound() : Ok(request);
+            Common.Models.UserEntity.Request request = await _requests.UpdateRequestStatusAsync(id, Status.APPROVED);
+            if (request is null)
+                return NotFound();
+
+            // ⚙️ Имитация создания учётных данных
+            var credentials = new Dictionary<string, string>
+            {
+                { "username", $"user_{Guid.NewGuid():N}" },
+                { "password", Guid.NewGuid().ToString("N")[..12] }
+            };
+
+            // 💾 Сохраняем секрет в OpenBao
+            await _openBao.SaveSecretAsync(request.resource, credentials, _token);
+
+            // 🗝 Добавляем запись о выданном ключе (пример — тестовые данные)
+            await _keys.AddIssuedKeyAsync(request.userId, 1, DateTime.UtcNow.AddDays(7));
+
+            // 🔁 Обновляем заявку
+            await _requests.UpdateRequestAsync(request);
+
+            return Ok(request);
         }
 
+        // ❌ Отклонить заявку
         [HttpPut("{id}/reject")]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> RejectRequest(Guid id)
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> Reject(Guid id)
         {
-            var request = await _service.UpdateRequestStatusAsync(id, Status.REJECTED);
-            return request == null ? NotFound() : Ok(request);
+            var req = await _requests.UpdateRequestStatusAsync(id, Status.REJECTED);
+            return req is null ? NotFound() : Ok(req);
         }
     }
 

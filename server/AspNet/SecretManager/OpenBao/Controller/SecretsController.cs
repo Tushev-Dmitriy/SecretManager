@@ -8,94 +8,33 @@ namespace SecretManager.OpenBao.Controllers
     public class SecretsController : ControllerBase
     {
         private readonly OpenBaoService _bao;
+        private readonly string _token;
 
-        public SecretsController(OpenBaoService bao)
+        public SecretsController(OpenBaoService bao, IConfiguration config)
         {
             _bao = bao;
+            _token = config["OpenBao:Token"] ?? throw new InvalidOperationException("Missing token");
         }
 
         [HttpGet("{name}")]
-        public async Task<IActionResult> GetSecret(
-            string name,
-            [FromHeader(Name = "X-Vault-Token")] string token,
-            CancellationToken ct)
+        public async Task<IActionResult> GetSecret(string name, CancellationToken ct)
         {
-            try
-            {
-                var secret = await _bao.GetSecretAsync(name, token, ct);
-                return secret == null ? NotFound() : Ok(secret);
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode(502, new { message = "OpenBao request failed", detail = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
-            }
-        }
-
-        [HttpGet("all")]
-        public async Task<IActionResult> ListSecrets(
-            [FromHeader(Name = "X-Vault-Token")] string token,
-            CancellationToken ct)
-        {
-            try
-            {
-                var secrets = await _bao.ListSecretsAsync(token, ct);
-                return Ok(secrets);
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode(502, new { message = "OpenBao request failed", detail = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
-            }
+            var secret = await _bao.GetSecretAsync(name, _token, ct);
+            return secret == null ? NotFound() : Ok(secret);
         }
 
         [HttpPost("{name}")]
-        public async Task<IActionResult> SaveSecret(
-            string name,
-            [FromBody] Dictionary<string, string> secret,
-            [FromHeader(Name = "X-Vault-Token")] string token,
-            CancellationToken ct)
+        public async Task<IActionResult> SaveSecret(string name, [FromBody] Dictionary<string, string> secret, CancellationToken ct)
         {
-            try
-            {
-                await _bao.SaveSecretAsync(name, secret, token, ct);
-                return Ok(new { message = "Secret saved" });
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode(502, new { message = "OpenBao request failed", detail = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
-            }
+            await _bao.SaveSecretAsync(name, secret, _token, ct);
+            return Ok(new { message = "Secret saved" });
         }
 
         [HttpDelete("{name}")]
-        public async Task<IActionResult> DeleteSecret(
-            string name,
-            [FromHeader(Name = "X-Vault-Token")] string token,
-            CancellationToken ct)
+        public async Task<IActionResult> DeleteSecret(string name, CancellationToken ct)
         {
-            try
-            {
-                await _bao.DeleteSecretAsync(name, token, ct);
-                return Ok(new { message = "Secret deleted" });
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode(502, new { message = "OpenBao request failed", detail = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
-            }
+            await _bao.DeleteSecretAsync(name, _token, ct);
+            return Ok(new { message = "Secret deleted" });
         }
     }
 }

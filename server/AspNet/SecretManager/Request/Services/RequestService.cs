@@ -2,7 +2,7 @@
 using SecretManager.Common.Data;
 using SecretManager.Common.Models.UserEntity;
 
-namespace SecretManager.Common.Services
+namespace SecretManager.Request.Services
 {
     public class RequestService
     {
@@ -13,9 +13,9 @@ namespace SecretManager.Common.Services
             _db = db;
         }
 
-        public async Task<Models.UserEntity.Request> CreateRequestAsync(Guid userId, string resource, string reason)
+        public async Task<Common.Models.UserEntity.Request> CreateRequestAsync(Guid userId, string resource, string reason)
         {
-            var request = new Models.UserEntity.Request
+            var request = new Common.Models.UserEntity.Request
             {
                 userId = userId,
                 resource = resource,
@@ -24,37 +24,34 @@ namespace SecretManager.Common.Services
                 createdAt = DateTime.UtcNow
             };
 
-            await _db.Request.AddAsync(request).ConfigureAwait(false);
-            await _db.SaveChangesAsync().ConfigureAwait(false);
+            await _db.Request.AddAsync(request);
+            await _db.SaveChangesAsync();
 
             return request;
         }
 
-        public async Task<List<Models.UserEntity.Request>> GetRequestsByUserAsync(Guid userId)
-        {
-            return await _db.Request
-                            .Where(r => r.userId == userId)
-                            .OrderByDescending(r => r.createdAt)
-                            .ToListAsync()
-                            .ConfigureAwait(false);
-        }
+        public async Task<List<Common.Models.UserEntity.Request>> GetRequestsByUserAsync(Guid userId) =>
+            await _db.Request.Where(r => r.userId == userId)
+                             .OrderByDescending(r => r.createdAt)
+                             .ToListAsync();
 
-        public async Task<List<Models.UserEntity.Request>> GetAllRequestsAsync()
-        {
-            return await _db.Request
-                            .OrderByDescending(r => r.createdAt)
-                            .ToListAsync()
-                            .ConfigureAwait(false);
-        }
+        public async Task<List<Common.Models.UserEntity.Request>> GetAllRequestsAsync() =>
+            await _db.Request.OrderByDescending(r => r.createdAt).ToListAsync();
 
-        public async Task<Models.UserEntity.Request?> UpdateRequestStatusAsync(Guid requestId, Status newStatus)
+        public async Task<Common.Models.UserEntity.Request?> UpdateRequestStatusAsync(Guid requestId, Status newStatus)
         {
-            var request = await _db.Request.FindAsync(requestId).ConfigureAwait(false);
+            var request = await _db.Request.FindAsync(requestId);
             if (request == null) return null;
 
             request.status = newStatus;
-            await _db.SaveChangesAsync().ConfigureAwait(false);
+            await _db.SaveChangesAsync();
+            return request;
+        }
 
+        public async Task<Common.Models.UserEntity.Request?> UpdateRequestAsync(Common.Models.UserEntity.Request request)
+        {
+            _db.Request.Update(request);
+            await _db.SaveChangesAsync();
             return request;
         }
     }

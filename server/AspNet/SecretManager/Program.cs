@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using SecretManager.Common.Data;
-using SecretManager.Common.Services;
+using SecretManager.Keys.Service;
 using SecretManager.OpenBao.Services;
+using SecretManager.Request.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddDbContext<KeysDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<RequestService>();
+builder.Services.AddScoped<KeysService>();
 
 builder.Services.AddHttpClient<OpenBaoService>(client =>
 {

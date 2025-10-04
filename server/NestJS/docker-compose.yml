@@ -1,0 +1,40 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.0
+    restart: always
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://aws-1-eu-north-1.pooler.supabase.com:5432/postgres?user=postgres.hfqrijwbxklnuaszsxmb&password=biteTheDust&currentSchema=keycloak&sslmode=require
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_PROXY_HEADERS: forwarded
+      JAVA_OPTS_APPEND: -Xms512m -Xmx1024m -Dliquibase.command.updateStatus=ignore -Dliquibase.hub.mode=off -Dliquibase.schemaName=keycloak
+    ports:
+      - '8080:8080'
+    command: start-dev --db-schema=keycloak
+    networks:
+      - app-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    mem_limit: 1024m
+    mem_reservation: 512m
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: biteTheDust
+      POSTGRES_DB: keycloak_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+volumes:
+  postgres_keycloak_data:
+networks:
+  app-network:
+    driver: bridge

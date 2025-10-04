@@ -4,37 +4,53 @@ services:
     restart: always
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://aws-1-eu-north-1.pooler.supabase.com:5432/postgres?user=postgres.hfqrijwbxklnuaszsxmb&password=biteTheDust&currentSchema=keycloak&sslmode=require
+      KC_DB_URL: jdbc:postgresql://aws-1-eu-north-1.pooler.supabase.com:5432/postgres?currentSchema=keycloak
+      KC_DB_USERNAME: postgres.hfqrijwbxklnuaszsxmb
+      KC_DB_PASSWORD: biteTheDust
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin_password
       KC_HOSTNAME: localhost
       KC_HTTP_ENABLED: true
-      KC_PROXY_HEADERS: forwarded
-      JAVA_OPTS_APPEND: -Xms512m -Xmx1024m -Dliquibase.command.updateStatus=ignore -Dliquibase.hub.mode=off -Dliquibase.schemaName=keycloak
+      KC_PROXY: edge
+      KC_DB_SCHEMA: keycloak
     ports:
       - '8080:8080'
-    command: start-dev --db-schema=keycloak
+    command:
+      - start-dev
+      - --db-schema=keycloak
+    networks:
+      - app-network
+    mem_limit: 1024m
+    mem_reservation: 512m
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres.hfqrijwbxklnuaszsxmb:biteTheDust@aws-1-eu-north-1.pooler.supabase.com:5432/postgres
+      - KEYCLOAK_ISSUER=http://localhost:8080/realms/corporate-secrets
+      - KEYCLOAK_INTERNAL_URL=http://keycloak:8080/realms/corporate-secrets
+      - KEYCLOAK_CLIENT_ID=secrets-app
+      - KEYCLOAK_CLIENT_SECRET=PhGgxs4WBO6MXMuzc1eRdvD37BXKdh8D
+      - KEYCLOAK_REDIRECT_URI=http://localhost:3000/auth/callback
+      - JWT_SECRET=32c06da051ca95a5449f0d3b881473281be38c106dd0b92665cfdf2a2c512a69
+      - SESSION_SECRET=5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d
+    volumes:
+      - .:/app
+      - /app/node_modules
     networks:
       - app-network
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    mem_limit: 1024m
-    mem_reservation: 512m
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: biteTheDust
-      POSTGRES_DB: keycloak_db
-    ports:
-      - '5433:5432'
-    volumes:
-      - postgres_keycloak_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-volumes:
-  postgres_keycloak_data:
+    depends_on:
+      - keycloak
+    command: yarn start:dev
+
 networks:
   app-network:
     driver: bridge

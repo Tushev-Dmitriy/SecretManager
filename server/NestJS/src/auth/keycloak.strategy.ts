@@ -14,10 +14,13 @@ export class KeycloakStrategy extends PassportStrategy(Strategy, 'keycloak') {
     private prisma: PrismaService,
   ) {
     super({
-      issuer: configService.get('KEYCLOAK_ISSUER', ''),
+      issuer: configService.get(
+        'KEYCLOAK_INTERNAL_URL',
+        configService.get('KEYCLOAK_ISSUER', ''),
+      ),
       authorizationURL: `${configService.get('KEYCLOAK_ISSUER')}/protocol/openid-connect/auth`,
-      tokenURL: `${configService.get('KEYCLOAK_ISSUER')}/protocol/openid-connect/token`,
-      userInfoURL: `${configService.get('KEYCLOAK_ISSUER')}/protocol/openid-connect/userinfo`,
+      tokenURL: `${configService.get('KEYCLOAK_INTERNAL_URL', configService.get('KEYCLOAK_ISSUER', ''))}/protocol/openid-connect/token`,
+      userInfoURL: `${configService.get('KEYCLOAK_INTERNAL_URL', configService.get('KEYCLOAK_ISSUER', ''))}/protocol/openid-connect/userinfo`,
       clientID: configService.get('KEYCLOAK_CLIENT_ID', ''),
       clientSecret: configService.get('KEYCLOAK_CLIENT_SECRET', ''),
       callbackURL: configService.get('KEYCLOAK_REDIRECT_URI', ''),

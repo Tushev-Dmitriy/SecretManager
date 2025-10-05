@@ -76,24 +76,65 @@ const RequestsPage = () => {
     content: "",
   });
 
-  const handleStatusChange = (id: string, newStatus: number) => {
-    setRequests((prev) =>
-      prev.map((request) =>
-        request.id === id ? { ...request, status: newStatus } : request
-      )
-    );
+  const handleStatusChange = async (id: string, newStatus: number) => {
+    const oldRequest = requests.find(req => req.id === id);
+    if (!oldRequest) return;
+
+    // Определяем endpoint в зависимости от нового статуса
+    let endpoint = '';
+    if (newStatus === 1) {
+      endpoint = `/api/requests/${id}/approve`;
+    } else if (newStatus === 2) {
+      endpoint = `/api/requests/${id}/reject`;
+    } else {
+      // Если статус "в ожидании" (0), не отправляем запрос
+      return;
+    }
+
+    try {
+      // Сначала обновляем UI оптимистично
+      setRequests((prev) =>
+        prev.map((request) =>
+          request.id === id ? { ...request, status: newStatus } : request
+        )
+      );
+
+      const response = await fetch(`http://localhost:5227${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Если запрос успешен, можно показать уведомление
+      console.log('Статус заявки успешно обновлен');
+    } catch (error) {
+      // В случае ошибки возвращаем старый статус
+      setRequests((prev) =>
+        prev.map((request) =>
+          request.id === id ? { ...request, status: oldRequest.status } : request
+        )
+      );
+      
+      console.error('Error updating request status:', error);
+      alert(`Ошибка при обновлении статуса: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+    }
   };
 
   const getStatusClass = (status: number) => {
     switch (status) {
       case 0:
-        return styles.statusDenied;
+        return styles.statusPending;  // В ожидании (PENDING)
       case 1:
-        return styles.statusApproved;
+        return styles.statusApproved; // Одобрено (APPROVED)
       case 2:
-        return styles.statusPending;
+        return styles.statusDenied;   // Отклонено (REJECTED)
       default:
-        return "";
+        return styles.statusPending;
     }
   };
 
@@ -230,9 +271,9 @@ const RequestsPage = () => {
                         request.status
                       )}`}
                     >
-                      <option value={0}>Отказано</option>
-                      <option value={1}>Выдан</option>
-                      <option value={2}>На проверке</option>
+                      <option value={0}>На проверке</option>
+                      <option value={1}>Одобрено</option>
+                      <option value={2}>Отклонено</option>
                     </select>
                   </td>
                   <td>{request.reason}</td>

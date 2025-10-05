@@ -56,20 +56,38 @@ namespace SecretManager.Requests.Controller
             if (!Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized();
 
-            var list = await _requests.GetRequestsByUserAsync(userId);
-            var query = list.AsQueryable();
+            // Запрос к БД
+            var query = _db.Request
+                .Where(r => r.userId == userId);
 
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var pattern = q.ToLower();
                 query = query.Where(r =>
                     r.resource.ToLower().Contains(pattern) ||
-                    r.reason.ToLower().Contains(pattern)
-                );
+                    r.reason.ToLower().Contains(pattern));
             }
 
-            return Ok(query.ToList());
+            // Левый join с KeyTypes
+            var result = await query
+                .GroupJoin(_db.KeyTypes,
+                           r => r.resource,
+                           k => k.Name,
+                           (r, kt) => new { Request = r, KeyTypes = kt })
+                .SelectMany(
+                    x => x.KeyTypes.DefaultIfEmpty(),
+                    (x, k) => new
+                    {
+                        Name = x.Request.resource,
+                        Type = k != null ? k.Category : "Unknown",
+                        Status = x.Request.status
+                    })
+                .OrderByDescending(r => r.Name)
+                .ToListAsync();
+
+            return Ok(result);
         }
+
 
         [HttpGet]
         [ProducesResponseType(200)]

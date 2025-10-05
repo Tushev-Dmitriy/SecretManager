@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  # AspNet API сервис
+  aspnet-api:
+    build:
+      context: ./AspNet/SecretManager
+      dockerfile: Dockerfile
+    container_name: secretmanager-aspnet
+    ports:
+      - "5227:5227"
+    environment:
+      OpenBao__Url: "http://openbao:8200"
+      OpenBao__Token: "root"
+      ASPNETCORE_URLS: "http://+:5227"
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=aws-1-eu-north-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.hfqrijwbxklnuaszsxmb;Password=biteTheDust;Pooling=true;SSL Mode=Require;Trust Server Certificate=True"
+    depends_on:
+      - openbao
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # OpenBao для AspNet
+  openbao:
+    image: openbao/openbao:latest
+    container_name: openbao
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+    command: "server -dev -dev-root-token-id=root"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Keycloak для NestJS
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.0
+    container_name: keycloak-secrets
+    restart: always
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://aws-1-eu-north-1.pooler.supabase.com:5432/postgres?currentSchema=keycloak&sslmode=require
+      KC_DB_USERNAME: postgres.hfqrijwbxklnuaszsxmb
+      KC_DB_PASSWORD: biteTheDust
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+      KC_DB_SCHEMA: keycloak
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+      - --db-schema=keycloak
+    networks:
+      - app-network
+    mem_limit: 1024m
+    mem_reservation: 512m
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+
+  # NestJS Backend
+  nestjs-backend:
+    build:
+      context: ./NestJS
+      dockerfile: Dockerfile
+    container_name: nestjs-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./NestJS/.env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+    depends_on:
+      - keycloak
+    mem_limit: 768m
+    mem_reservation: 256m
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

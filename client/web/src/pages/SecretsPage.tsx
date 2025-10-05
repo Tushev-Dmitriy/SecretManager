@@ -1,19 +1,10 @@
 import { useState, useEffect } from "react";
 import styles from "../App.module.css";
 
-interface KeyType {
+interface Secret {
   id: number;
   name: string;
   category: string;
-}
-
-interface Secret {
-  id: number;
-  userId: string;
-  keyTypeId: number;
-  keyType: KeyType;
-  issuedAt: string;
-  expiresAt: string;
 }
 
 const SecretsPage = () => {
@@ -27,7 +18,7 @@ const SecretsPage = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:5227/api/keys');
+      const response = await fetch('http://localhost:5227/api/keys/types');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -81,8 +72,8 @@ const SecretsPage = () => {
               ) : (
                 secrets.map((secret) => (
                   <tr key={secret.id}>
-                    <td>{secret.keyType.name}</td>
-                    <td>{secret.keyType.category}</td>
+                    <td>{secret.name}</td>
+                    <td>{secret.category}</td>
                   </tr>
                 ))
               )}

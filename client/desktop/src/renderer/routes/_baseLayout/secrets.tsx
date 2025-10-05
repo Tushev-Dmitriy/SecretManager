@@ -2,8 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import styles from "./pages.module.css";
 import { Button, SearchIcon, Table } from "@/renderer/components/ui";
-<<<<<<< HEAD
-=======
 
 // Типы данных
 interface SecretType {
@@ -11,7 +9,6 @@ interface SecretType {
   name: string;
   category: string;
 }
->>>>>>> d40ee7c60d0379cee7e50d174219e6166eaf0169
 
 export const Route = createFileRoute("/_baseLayout/secrets")({
   component: RouteComponent,

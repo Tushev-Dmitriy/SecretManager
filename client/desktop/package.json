@@ -21,7 +21,6 @@
     "dist:linux": "npm run build:electron && electron-builder --linux"
   },
   "dependencies": {
-    "@secret-manager/ui": "workspace:*",
     "@tanstack/react-router": "^1.132.33",
     "@tanstack/react-router-devtools": "^1.132.33",
     "react": "^19.1.1",

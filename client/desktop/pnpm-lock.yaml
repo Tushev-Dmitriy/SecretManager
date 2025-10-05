@@ -6,13 +6,8 @@ settings:
 
 importers:
 
-  .: {}
-
-  apps/desktop:
+  .:
     dependencies:
-      '@secret-manager/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@tanstack/react-router':
         specifier: ^1.132.33
         version: 1.132.37(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -86,19 +81,6 @@ importers:
       vite:
         specifier: ^7.1.7
         version: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1)
-
-  packages/ui:
-    dependencies:
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-    devDependencies:
-      '@types/react':
-        specifier: ^19.2.0
-        version: 19.2.0
-      react:
-        specifier: ^19.2.0
-        version: 19.2.0
 
 packages:
 

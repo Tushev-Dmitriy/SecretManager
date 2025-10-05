@@ -253,3 +253,60 @@
     transform: translateY(-10px);
   }
 }
+
+/* Стили для модального окна заявки */
+.requestInfo {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.requestInfo p {
+  margin: 8px 0;
+  color: #374151;
+}
+
+.reasonSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reasonLabel {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.reasonTextarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  color: #374151;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.reasonTextarea:focus {
+  border-color: #333cc1;
+  box-shadow: 0 0 0 3px rgba(51, 60, 193, 0.1);
+}
+
+.reasonTextarea::placeholder {
+  color: #9ca3af;
+}
+
+.modalFooter {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}

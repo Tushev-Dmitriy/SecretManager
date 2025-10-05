@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: true,
     credentials: true,
   });
 
@@ -31,14 +32,16 @@ async function bootstrap() {
 
   // Configure passport serialization
   passport.serializeUser((user: any, done: any) => {
-    done(null, user.id);
+    console.log('Serializing user:', user);
+    done(null, user?.id || user);
   });
 
   passport.deserializeUser(async (id: string, done: any) => {
     try {
-      // Note: You might want to inject PrismaService here for user lookup
+      console.log('Deserializing user ID:', id);
       done(null, { id });
     } catch (error) {
+      console.error('Deserialize error:', error);
       done(error, undefined);
     }
   });
@@ -46,7 +49,37 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Secret Manager API')
+    .setDescription(
+      'API для управления корпоративными секретами с SSO аутентификацией через Keycloak',
+    )
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addTag('auth', 'Аутентификация и авторизация')
+    .addTag('users', 'Управление пользователями')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
   await app.listen(3000, '0.0.0.0');
   console.log(`Application is running on: http://0.0.0.0:3000`);
+  console.log(`Swagger documentation: http://0.0.0.0:3000/api`);
 }
 bootstrap();

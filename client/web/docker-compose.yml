@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secretmanager-frontend
+    ports:
+      - "5173:5173"
+    restart: unless-stopped

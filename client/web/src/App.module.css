@@ -7,24 +7,35 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
 .nav {
   display: flex;
   gap: 40px;
 }
 
 .navLink {
-  color: #333cc1;
+  color: #6b7280;
   text-decoration: none;
   font-weight: 600;
   font-size: 16px;
   position: relative;
+  padding: 8px 0;
+  transition: color 0.2s;
 }
 
-.navLink:first-child {
+.navLink:hover {
   color: #333cc1;
 }
 
-.navLink:first-child::after {
+.navLinkActive {
+  color: #333cc1;
+}
+
+.navLinkActive::after {
   content: "";
   position: absolute;
   bottom: -20px;

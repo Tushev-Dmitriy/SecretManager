@@ -1,0 +1,26 @@
+.container {
+  overflow: hidden;
+  border-radius: 20px;
+  max-width: 660px;
+  width: 100%;
+}
+
+.container:has(.title) .form {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.title {
+  padding: 16px 0;
+  text-align: center;
+  color: #fff;
+  background-color: var(--accent-color, #333cc1);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  padding: 40px 24px;
+  background-color: var(--bg-light-color);
+}

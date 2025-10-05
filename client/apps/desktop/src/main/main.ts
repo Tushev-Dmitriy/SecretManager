@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
+
 import { isDev } from "./util.js";
 
 const createMainWindow = () => {

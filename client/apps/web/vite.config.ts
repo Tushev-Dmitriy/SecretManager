@@ -1,4 +1,4 @@
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react/";
 import path from "node:path";
 import { defineConfig } from "vite";
 
@@ -10,12 +10,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src/"),
     },
   },
-  base: "./",
-  build: {
-    outDir: "dist/renderer",
-  },
-  // server: {
-  //   port: 5173,
-  //   strictPort: true,
-  // },
 });

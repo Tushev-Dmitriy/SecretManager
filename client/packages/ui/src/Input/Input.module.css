@@ -1,0 +1,24 @@
+.input:is([type="text"], [type="password"], [type="email"]) {
+  padding: 20px 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 50px;
+  background-color: transparent;
+  font-size: 16px;
+  transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) border-color;
+
+  &::placeholder {
+    color: var(--muted-text-color);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-color);
+  }
+}
+
+@media (max-width: 500px) {
+  .input:is([type="text"], [type="password"], [type="email"]) {
+    padding: 16px;
+    font-size: 14px;
+  }
+}

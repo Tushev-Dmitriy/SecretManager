@@ -1,0 +1,19 @@
+{
+  "name": "@secret-manager/ui",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.17.0",
+  "description": "",
+  "main": "src/index.ts",
+  "peerDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0"
+  }
+}

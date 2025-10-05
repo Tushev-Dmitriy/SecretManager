@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import styles from "./pages.module.css";
-import { Badge, Button, SearchIcon, Table } from "@/renderer/components/ui";
+import { Button, SearchIcon, Table } from "@/renderer/components/ui";
 
 export const Route = createFileRoute("/_baseLayout/secrets")({
   component: RouteComponent,

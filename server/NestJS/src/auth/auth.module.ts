@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { KeycloakStrategy } from './keycloak.strategy';
@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { SessionMiddleware } from './session.middleware';
 
 @Module({
   imports: [
@@ -22,7 +23,17 @@ import { PrismaService } from '../prisma/prisma.service';
     JwtAuthGuard,
     RolesGuard,
     PrismaService,
+    SessionMiddleware,
   ],
   exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
-export class AuthModule {}
+export class AuthModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(SessionMiddleware)
+      .forRoutes(
+        { path: 'auth/login', method: RequestMethod.GET },
+        { path: 'auth/callback', method: RequestMethod.GET },
+      );
+  }
+}

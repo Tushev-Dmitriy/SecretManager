@@ -1,16 +1,24 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import { Sidebar } from "../components";
+import { Sidebar, Header } from "../components/business";
+import styles from "./_baseLayout.module.css";
 
 export const Route = createFileRoute("/_baseLayout")({
   component: LayoutComponent,
+  beforeLoad: async () => {
+    // throw redirect({ to: "/login" });
+  },
 });
 
 function LayoutComponent() {
   return (
-    <div className="baseLayout">
+    <div className={styles.baseLayout}>
       <Sidebar />
-      <Outlet />
+
+      <div className={styles.page}>
+        <Header />
+        <Outlet />
+      </div>
     </div>
   );
 }

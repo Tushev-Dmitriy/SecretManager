@@ -9,10 +9,13 @@
   --accent-color: #333cc1;
   --accent-color-darken: #2b2eb3;
   --accent-color-lighten: #4150d6;
+  --secondary-color: #ebeeff;
   --bg-color: #f1f4f8;
   --bg-light-color: #ffffff;
   --border-color: #e7e7e8;
   --muted-text-color: #9797a9;
+  --success-color: #139901;
+  --danger-color: #e01515;
 }
 
 * {
@@ -41,10 +44,6 @@ h1 {
   min-height: 100dvh;
   display: grid;
   place-items: center;
-}
-
-.baseLayout {
-  display: flex;
 }
 
 @media (max-width: 500px) {

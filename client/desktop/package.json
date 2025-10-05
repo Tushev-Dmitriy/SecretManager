@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "format": "prettier . --write",
     "lint": "eslint . --fix",
-    "dev:electron": "npm run build:electron && concurrently 'cross-env NODE_ENV=development electron .' 'npm run dev'",
+    "dev:electron": "npm run build:electron && concurrently \"npm run dev\" \"cross-env NODE_ENV=development electron .\"",
     "build:electron": "npm run build && tsc --project src/main/tsconfig.json",
     "dist": "npm run build:electron && electron-builder",
     "dist:win": "npm run build:electron && electron-builder --win",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@tanstack/react-router": "^1.132.33",
     "@tanstack/react-router-devtools": "^1.132.33",
+    "clsx": "^2.1.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

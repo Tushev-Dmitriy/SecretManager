@@ -1,4 +1,4 @@
-import { Button, Form, Input } from "@secret-manager/ui";
+import { Button, Form, Input } from "../ui";
 
 export const LoginForm = () => {
   return (

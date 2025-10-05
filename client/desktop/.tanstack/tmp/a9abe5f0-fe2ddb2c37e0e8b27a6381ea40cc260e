@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './renderer/routes/__root'
 import { Route as LoginRouteImport } from './renderer/routes/login'
 import { Route as BaseLayoutRouteImport } from './renderer/routes/_baseLayout'
-import { Route as BaseLayoutIndexRouteImport } from './renderer/routes/_baseLayout/index'
-import { Route as BaseLayoutSecretsRouteImport } from './renderer/routes/_baseLayout/secrets'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -23,49 +21,28 @@ const BaseLayoutRoute = BaseLayoutRouteImport.update({
   id: '/_baseLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BaseLayoutIndexRoute = BaseLayoutIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BaseLayoutRoute,
-} as any)
-const BaseLayoutSecretsRoute = BaseLayoutSecretsRouteImport.update({
-  id: '/secrets',
-  path: '/secrets',
-  getParentRoute: () => BaseLayoutRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
-  '/secrets': typeof BaseLayoutSecretsRoute
-  '/': typeof BaseLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/secrets': typeof BaseLayoutSecretsRoute
-  '/': typeof BaseLayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_baseLayout': typeof BaseLayoutRouteWithChildren
+  '/_baseLayout': typeof BaseLayoutRoute
   '/login': typeof LoginRoute
-  '/_baseLayout/secrets': typeof BaseLayoutSecretsRoute
-  '/_baseLayout/': typeof BaseLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/secrets' | '/'
+  fullPaths: '/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/secrets' | '/'
-  id:
-    | '__root__'
-    | '/_baseLayout'
-    | '/login'
-    | '/_baseLayout/secrets'
-    | '/_baseLayout/'
+  to: '/login'
+  id: '__root__' | '/_baseLayout' | '/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  BaseLayoutRoute: typeof BaseLayoutRouteWithChildren
+  BaseLayoutRoute: typeof BaseLayoutRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -85,39 +62,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BaseLayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_baseLayout/': {
-      id: '/_baseLayout/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof BaseLayoutIndexRouteImport
-      parentRoute: typeof BaseLayoutRoute
-    }
-    '/_baseLayout/secrets': {
-      id: '/_baseLayout/secrets'
-      path: '/secrets'
-      fullPath: '/secrets'
-      preLoaderRoute: typeof BaseLayoutSecretsRouteImport
-      parentRoute: typeof BaseLayoutRoute
-    }
   }
 }
 
-interface BaseLayoutRouteChildren {
-  BaseLayoutSecretsRoute: typeof BaseLayoutSecretsRoute
-  BaseLayoutIndexRoute: typeof BaseLayoutIndexRoute
-}
-
-const BaseLayoutRouteChildren: BaseLayoutRouteChildren = {
-  BaseLayoutSecretsRoute: BaseLayoutSecretsRoute,
-  BaseLayoutIndexRoute: BaseLayoutIndexRoute,
-}
-
-const BaseLayoutRouteWithChildren = BaseLayoutRoute._addFileChildren(
-  BaseLayoutRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
-  BaseLayoutRoute: BaseLayoutRouteWithChildren,
+  BaseLayoutRoute: BaseLayoutRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

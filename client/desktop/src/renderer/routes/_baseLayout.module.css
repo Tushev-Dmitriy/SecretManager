@@ -1,0 +1,10 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.baseLayout {
+  display: flex;
+  align-items: start;
+}

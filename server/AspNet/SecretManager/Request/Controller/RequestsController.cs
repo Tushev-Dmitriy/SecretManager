@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SecretManager.Common.Data;
+using SecretManager.Common.Models;
 using SecretManager.Common.Models.UserEntity;
-using SecretManager.Keys.Service;
 using SecretManager.OpenBao.Services;
 using SecretManager.Request.Services;
-using System.Security.Claims;
 
 namespace SecretManager.Requests.Controller
 {
@@ -14,91 +14,127 @@ namespace SecretManager.Requests.Controller
     {
         private readonly RequestService _requests;
         private readonly OpenBaoService _openBao;
-        private readonly KeysService _keys;
+        private readonly ApplicationDbContext _db;
         private readonly string _token;
 
-        public RequestsController(
-            RequestService requests,
-            OpenBaoService openBao,
-            KeysService keys,
-            IConfiguration config)
+        public RequestsController(RequestService requests, OpenBaoService openBao, ApplicationDbContext db, IConfiguration config)
         {
             _requests = requests;
             _openBao = openBao;
-            _keys = keys;
+            _db = db;
             _token = config["OpenBao:Token"] ?? throw new InvalidOperationException("Missing OpenBao token");
         }
 
-        // 📝 Создание заявки
         [HttpPost]
-        //[Authorize]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> CreateRequest([FromBody] RequestCreateDto dto)
         {
-            var userIdStr = User.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            var userIdStr = "ba1d8683-14de-4d59-b01c-a9ca9476ee24"; // временно
+            if (!Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized();
 
+            // Проверяем наличие ключа в таблице KeyTypes
+            var keyType = await _db.KeyTypes.FirstOrDefaultAsync(k => k.Name == dto.Resource);
+            if (keyType == null)
+                return NotFound(new { message = $"KeyType '{dto.Resource}' not found" });
+
             var request = await _requests.CreateRequestAsync(userId, dto.Resource, dto.Reason);
-            return Ok(new
-            {
-                request_id = request.id,
-                status = request.status.ToString()
-            });
+            return Ok(new { request_id = request.id, status = request.status.ToString() });
         }
 
-        // 👤 Получить свои заявки
+
+        /// <summary>
+        /// Получить свои заявки
+        /// </summary>
         [HttpGet("my")]
-        //[Authorize]
-        public async Task<IActionResult> GetMyRequests()
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> GetMyRequests([FromQuery] string? q)
         {
-            var userIdStr = User.FindFirstValue("sub");
-            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            var userIdStr = "ba1d8683-14de-4d59-b01c-a9ca9476ee24";
+            if (!Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized();
 
             var list = await _requests.GetRequestsByUserAsync(userId);
-            return Ok(list);
+            var query = list.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var pattern = q.ToLower();
+                query = query.Where(r =>
+                    r.resource.ToLower().Contains(pattern) ||
+                    r.reason.ToLower().Contains(pattern)
+                );
+            }
+
+            return Ok(query.ToList());
         }
 
-        // 🧾 Все заявки (для админов)
         [HttpGet]
-        //[Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> GetAll([FromQuery] string? q, [FromQuery] string? status)
         {
-            var all = await _requests.GetAllRequestsAsync();
-            return Ok(all);
+            var all = await _requests.GetAllRequestsAsync(); // получаем IQueryable внутри сервиса лучше
+            var query = all.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(r => r.status.ToString() == status);
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var pattern = q.ToLower();
+                query = query.Where(r =>
+                    r.resource.ToLower().Contains(pattern) ||
+                    r.reason.ToLower().Contains(pattern)
+                );
+            }
+
+            return Ok(query.ToList());
         }
 
-        // ✅ Одобрить заявку
+        /// <summary>
+        /// Одобрить заявку
+        /// </summary>
         [HttpPut("{id}/approve")]
-        //[Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Approve(Guid id)
         {
-            Common.Models.UserEntity.Request request = await _requests.UpdateRequestStatusAsync(id, Status.APPROVED);
-            if (request is null)
-                return NotFound();
+            var request = await _requests.UpdateRequestStatusAsync(id, Status.APPROVED);
+            if (request is null) return NotFound();
 
-            // ⚙️ Имитация создания учётных данных
             var credentials = new Dictionary<string, string>
             {
                 { "username", $"user_{Guid.NewGuid():N}" },
                 { "password", Guid.NewGuid().ToString("N")[..12] }
             };
-
-            // 💾 Сохраняем секрет в OpenBao
             await _openBao.SaveSecretAsync(request.resource, credentials, _token);
 
-            // 🗝 Добавляем запись о выданном ключе (пример — тестовые данные)
-            await _keys.AddIssuedKeyAsync(request.userId, 1, DateTime.UtcNow.AddDays(7));
+            var keyType = await _db.KeyTypes.FirstOrDefaultAsync(k => k.Name == request.resource);
+            if (keyType != null)
+            {
+                var issuedKey = new IssuedKey
+                {
+                    UserId = request.userId,
+                    KeyTypeId = keyType.Id,
+                    IssuedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddDays(7)
+                };
+                _db.IssuedKeys.Add(issuedKey);
+                await _db.SaveChangesAsync();
+            }
 
-            // 🔁 Обновляем заявку
             await _requests.UpdateRequestAsync(request);
-
             return Ok(request);
         }
 
-        // ❌ Отклонить заявку
+        /// <summary>
+        /// Отклонить заявку
+        /// </summary>
         [HttpPut("{id}/reject")]
-        //[Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
         public async Task<IActionResult> Reject(Guid id)
         {
             var req = await _requests.UpdateRequestStatusAsync(id, Status.REJECTED);
@@ -106,7 +142,6 @@ namespace SecretManager.Requests.Controller
         }
     }
 
-    // DTO для создания заявки
     public class RequestCreateDto
     {
         public string Resource { get; set; } = null!;

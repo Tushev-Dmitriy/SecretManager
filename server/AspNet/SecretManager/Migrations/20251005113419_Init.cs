@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SecretManager.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIssuedKeysAndKeyTypes : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,12 +27,43 @@ namespace SecretManager.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Request",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    userId = table.Column<Guid>(type: "uuid", nullable: false),
+                    resource = table.Column<string>(type: "text", nullable: false),
+                    reason = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false, defaultValue: "PENDING"),
+                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Request", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "User",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    username = table.Column<string>(type: "text", nullable: false),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    passwordHash = table.Column<string>(type: "text", nullable: false),
+                    role = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_User", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "IssuedKeys",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     KeyTypeId = table.Column<int>(type: "integer", nullable: false),
                     IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -59,6 +90,12 @@ namespace SecretManager.Migrations
         {
             migrationBuilder.DropTable(
                 name: "IssuedKeys");
+
+            migrationBuilder.DropTable(
+                name: "Request");
+
+            migrationBuilder.DropTable(
+                name: "User");
 
             migrationBuilder.DropTable(
                 name: "KeyTypes");

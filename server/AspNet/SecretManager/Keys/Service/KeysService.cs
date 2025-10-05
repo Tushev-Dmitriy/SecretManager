@@ -6,9 +6,9 @@ namespace SecretManager.Keys.Service
 {
     public class KeysService
     {
-        private readonly KeysDbContext _db;
+        private readonly ApplicationDbContext _db;
 
-        public KeysService(KeysDbContext db)
+        public KeysService(ApplicationDbContext db)
         {
             _db = db;
         }

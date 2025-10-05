@@ -14,9 +14,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDbContext<KeysDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 builder.Services.AddScoped<RequestService>();
 builder.Services.AddScoped<KeysService>();
 
@@ -36,6 +33,14 @@ builder.Services.AddAuthentication(options =>
     options.Authority = builder.Configuration["Keycloak:Authority"];
     options.Audience = builder.Configuration["Keycloak:Audience"];
     options.RequireHttpsMetadata = false;
+
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = false,
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = false
+    };
 });
 
 builder.Services.AddAuthorization();
